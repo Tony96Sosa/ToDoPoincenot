@@ -1,25 +1,45 @@
 import { useEffect, useState } from 'react';
+import Logo from './assets/PCNT-logo.svg';
+import Mas from './assets/Mas.svg';
+import Modal from './components/Modal';
+import SelectOptions from './components/SelectOptions';
+import ToDos from './components/ToDos';
+import Input from './components/Input';
+import Header from './components/Header';
 
 const BASE_URL = 'https://api-3sxs63jhua-uc.a.run.app/v1';
 
 const App = () => {
-  const [userId, setUserId] = useState('009e36cd-7088-4552-8ad6-7d886a8ca427');
+  const [userId, setUserId] = useState(
+    JSON.parse(localStorage.getItem('userId')) || ''
+  );
   const [toDos, setToDos] = useState([]);
+  const [value, setValue] = useState('');
+  const [selectOption, setSelectOption] = useState('Todos');
+  const [open, setOpen] = useState(false);
+  const [modal, setModal] = useState(false);
+  const [filter, setFilter] = useState(false);
 
   const getUserId = () => {
     fetch(`${BASE_URL}/userId`)
       .then((response) => response.text())
-      .then((data) => setUserId(data));
+      .then((data) => {
+        setUserId(data);
+        localStorage.setItem('userId', JSON.stringify(data));
+      });
   };
 
   const getToDosByUserId = () => {
     fetch(`${BASE_URL}/todo/${userId}`)
       .then((response) => response.json())
-      .then((data) => setToDos(data));
+      .then((data) => {
+        setToDos(data);
+        setFilter(false);
+      });
   };
 
-  const postToDoId = () => {
-    const data = { title: 'titulo2', message: 'mensaje2' };
+  const postToDoId = (message) => {
+    const data = { title: 'title', message };
     fetch(`${BASE_URL}/todo/${userId}`, {
       method: 'POST',
       body: JSON.stringify(data),
@@ -28,11 +48,13 @@ const App = () => {
       },
     })
       .then((response) => response.json())
-      .then((data) => console.log(data));
+      .then(() => {
+        getToDosByUserId();
+      });
   };
 
-  const putToDoId = (toDoId) => {
-    const data = { completed: true, todoId: toDoId };
+  const putToDoId = (check, todoId) => {
+    const data = { completed: check, todoId };
     fetch(`${BASE_URL}/todo/${userId}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -41,7 +63,9 @@ const App = () => {
       },
     })
       .then((response) => response.json())
-      .then((data) => console.log(data));
+      .then(() => {
+        getToDosByUserId();
+      });
   };
 
   const deleteToDoId = (toDoId) => {
@@ -54,7 +78,9 @@ const App = () => {
       },
     })
       .then((response) => response.json())
-      .then((data) => console.log(data));
+      .then(() => {
+        getToDosByUserId();
+      });
   };
 
   const resetToDoUser = () => {
@@ -62,27 +88,91 @@ const App = () => {
       method: 'DELETE',
     })
       .then((response) => response.json())
-      .then((data) => console.log(data));
+      .then(() => {
+        getToDosByUserId();
+        setModal(!modal);
+      });
+  };
+
+  const getToDosCompleted = (completed) => {
+    fetch(`${BASE_URL}/todo/${userId}/${completed}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setToDos(data);
+        setFilter(true);
+      });
+  };
+
+  const handleSubmit = () => {
+    if (value !== '') postToDoId(value);
+    setValue('');
+  };
+
+  const handleCheck = (e, id) => {
+    putToDoId(e.target.checked, id);
+  };
+
+  const handleSelect = (e) => {
+    setSelectOption(e.target.innerText);
+    setOpen(!open);
+    if (e.target.innerText === 'Todos') return getToDosByUserId();
+    if (e.target.innerText === 'Realizados') return getToDosCompleted(true);
+    if (e.target.innerText === 'No Realizados') return getToDosCompleted(false);
   };
 
   useEffect(() => {
-    // getUserId();
-    getToDosByUserId();
-    // postToDoId();
-    // resetToDoUser();
+    if (userId === '') {
+      getUserId();
+    } else {
+      getToDosByUserId();
+    }
   }, []);
 
-  useEffect(() => {
-    if (toDos.length > 0) {
-      // putToDoId(toDos[2].id);
-      // deleteToDoId(toDos[1].id);
-    }
-  }, [toDos]);
   return (
-    <>
-      <h1>ToDoApp</h1>
-      <button onClick={() => resetToDoUser()}>Reset</button>
-    </>
+    <div className="fondo">
+      <div className="logo">
+        <img src={Logo} alt="Logo" />
+      </div>
+      {toDos.length === 0 && !filter && <Header />}
+      <Input value={value} setValue={setValue} />
+      {(toDos.length !== 0 || filter) && (
+        <div className="box">
+          <div className="box-items">
+            <div className="options">
+              <div className="titulo" onClick={() => setModal(!modal)}>
+                To do list
+                <img src={Mas} alt="mas" />
+              </div>
+              <SelectOptions
+                setOpen={setOpen}
+                open={open}
+                selectOption={selectOption}
+                handleSelect={handleSelect}
+              />
+            </div>
+            <ToDos
+              toDos={toDos}
+              handleCheck={handleCheck}
+              deleteToDoId={deleteToDoId}
+            />
+          </div>
+        </div>
+      )}
+      <div className="boton-box">
+        <button
+          className={`boton ${value ? 'activado' : 'desactivado'}`}
+          onClick={handleSubmit}>
+          Agregar
+        </button>
+      </div>
+      {modal && (
+        <Modal
+          setModal={setModal}
+          modal={modal}
+          resetToDoUser={resetToDoUser}
+        />
+      )}
+    </div>
   );
 };
 
