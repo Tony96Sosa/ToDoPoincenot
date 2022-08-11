@@ -9,8 +9,10 @@ body {
 
 .fondo {
   background-color: #e5e5e5;
-  width: 375px;
-  height: 685px;
+  max-width: 500px;
+  max-height: 900px;
+  width: 100vw;
+  height: 100vh;
   margin: auto;
   position: relative;
 }
@@ -44,7 +46,6 @@ input::placeholder {
 }
 .box {
   width: 315px;
-  height: 440px;
   margin: auto;
   overflow: scroll;
 }
@@ -165,7 +166,7 @@ input[type='checkbox']:checked + label {
   color: #000000;
   display: flex;
   align-items: center;
-  justify-content: end;
+  justify-content: flex-end;
   cursor: pointer;
 }
 .options-box {
