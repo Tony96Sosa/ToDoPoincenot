@@ -138,7 +138,7 @@ input[type='checkbox']:checked + label {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: auto;
+  margin: 0 auto 20px;
   box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 .activado {
@@ -153,7 +153,6 @@ input[type='checkbox']:checked + label {
   position: absolute;
   bottom: 0;
   width: 100%;
-  padding-bottom: 20px;
 }
 
 .selectbox {
